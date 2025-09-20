@@ -16,6 +16,10 @@ type MyEnv = {
   version: string;
   updatedAt: string;
   repoUrl?: string;
+  // Optional on-chain fields
+  registryAddress?: string;
+  registerTxHash?: string;
+  deployTxHash?: string;
 };
 
 type RepoInfo = {
@@ -30,7 +34,7 @@ export default function ProfilePage() {
   const primaryAddress = wallets[0]?.address;
 
   const [myEnvs, setMyEnvs] = useState<MyEnv[]>([]);
-  const displayName = user?.federated?.username || user?.email?.address || primaryAddress || 'user';
+  const displayName = user?.email?.address || primaryAddress || 'user';
 
   useEffect(() => {
     if (!primaryAddress) return;
@@ -74,6 +78,7 @@ export default function ProfilePage() {
 
 function EnvCard({ env }: { env: MyEnv }) {
   const [repoInfo, setRepoInfo] = useState<RepoInfo>({});
+  const explorerBase = process.env.NEXT_PUBLIC_EXPLORER_BASE;
 
   useEffect(() => {
     let cancelled = false;
@@ -112,6 +117,19 @@ function EnvCard({ env }: { env: MyEnv }) {
       <div style={{ opacity: 0.7, marginTop: 4 }}>
         Updated {repoInfo.lastPush ? timeAgo(repoInfo.lastPush) : timeAgo(env.updatedAt)}
       </div>
+      {(env.registryAddress || env.registerTxHash || env.deployTxHash) && explorerBase && (
+        <div style={{ marginTop: 10, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          {env.registryAddress && (
+            <Link className="link" href={`${explorerBase}/address/${env.registryAddress}`} target="_blank">Registry</Link>
+          )}
+          {env.registerTxHash && (
+            <Link className="link" href={`${explorerBase}/tx/${env.registerTxHash}`} target="_blank">Register Tx</Link>
+          )}
+          {env.deployTxHash && (
+            <Link className="link" href={`${explorerBase}/tx/${env.deployTxHash}`} target="_blank">Deploy Tx</Link>
+          )}
+        </div>
+      )}
       {env.repoUrl && (
         <div style={{ marginTop: 10 }}>
           <Link className="link" href={env.repoUrl} target="_blank">View Repository</Link>

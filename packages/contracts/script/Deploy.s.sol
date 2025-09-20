@@ -17,7 +17,8 @@ contract Deploy is Script {
         string memory commitHash = vm.envOr("COMMIT_HASH", string(""));
         string memory metadataCID = vm.envOr("METADATA_CID", string(""));
 
-        vm.startBroadcast();
+        uint256 deployerKey = vm.envUint("DEPLOYER_KEY");
+        vm.startBroadcast(deployerKey);
         reg = new EnvRegistry();
         registryAddr = address(reg);
 

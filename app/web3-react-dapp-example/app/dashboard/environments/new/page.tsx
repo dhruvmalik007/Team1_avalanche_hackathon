@@ -18,6 +18,7 @@ export default function NewEnvironment() {
   const [saved, setSaved] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [lastTx, setLastTx] = useState<string | null>(null);
 
   if (!authenticated) {
     return (
@@ -71,16 +72,44 @@ export default function NewEnvironment() {
                 const commitHash = randomHex(16);
                 const metadataCID = `bafy${randomHex(10)}`;
 
-                // Deploy (if bytecode provided) and register
-                const res = await deployAndRegister({
-                  envId,
-                  repoUrl: repoUrl || '',
-                  envPath,
-                  commitHash,
-                  metadataCID,
-                });
+                // Choose server-signer vs client wallet flow
+                const useServer = process.env.NEXT_PUBLIC_USE_SERVER_SIGNER === '1';
+                let registryAddress: string | undefined;
+                let registerTxHash: string;
+                let deployTxHash: string | undefined;
 
-                setStatus(`Registered. Tx: ${res.registerTxHash}`);
+                if (useServer) {
+                  const resp = await fetch('/api/registry/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      envId,
+                      repoUrl: repoUrl || '',
+                      envPath,
+                      commitHash,
+                      metadataCID,
+                      registryAddress: process.env.NEXT_PUBLIC_REGISTRY_ADDRESS,
+                    }),
+                  });
+                  if (!resp.ok) throw new Error(await resp.text());
+                  const data = await resp.json();
+                  registryAddress = data.registryAddress;
+                  registerTxHash = data.registerTxHash;
+                  setStatus(`Registered. Tx: ${registerTxHash}`);
+                } else {
+                  // Deploy (if bytecode provided) and register via wallet
+                  const res = await deployAndRegister({
+                    envId,
+                    repoUrl: repoUrl || '',
+                    envPath,
+                    commitHash,
+                    metadataCID,
+                  });
+                  registryAddress = res.registryAddress;
+                  registerTxHash = res.registerTxHash as string;
+                  deployTxHash = res.deployTxHash as string | undefined;
+                  setStatus(`Registered. Tx: ${registerTxHash}`);
+                }
 
                 // Persist to profile format (extra fields tolerated)
                 const now = new Date().toISOString();
@@ -97,9 +126,9 @@ export default function NewEnvironment() {
                   version: '0.1.0',
                   updatedAt: now,
                   repoUrl: repoUrl || undefined,
-                  registryAddress: res.registryAddress,
-                  registerTxHash: res.registerTxHash,
-                  deployTxHash: res.deployTxHash,
+                  registryAddress,
+                  registerTxHash,
+                  deployTxHash,
                   commitHash,
                   envPath,
                 };
@@ -108,6 +137,7 @@ export default function NewEnvironment() {
                 const next = [item, ...prev];
                 localStorage.setItem(key, JSON.stringify(next));
                 setSaved(now);
+                setLastTx(registerTxHash || null);
               } catch (e: any) {
                 console.error('save error', e);
                 setStatus(e?.message || 'Error');
@@ -121,6 +151,12 @@ export default function NewEnvironment() {
             {saved && !pending && (
               <div style={{ marginTop: 10, opacity: 0.85 }}>
                 Saved! View it on your <Link className="link" href="/dashboard/profile">Profile</Link>.
+                {process.env.NEXT_PUBLIC_EXPLORER_BASE && lastTx && (
+                  <>
+                    {' '}•{' '}
+                    <Link className="link" href={`${process.env.NEXT_PUBLIC_EXPLORER_BASE}/tx/${lastTx}`} target="_blank">View Tx</Link>
+                  </>
+                )}
               </div>
             )}
           </div>
