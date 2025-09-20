@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
+    "build:web": "yarn workspace web3-react-dapp-example build",
     "lint": "turbo run lint",
     "test": "turbo run test"
   },

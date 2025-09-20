@@ -1,0 +1,4 @@
+{
+  "installCommand": "yarn install --cwd ../..",
+  "buildCommand": "yarn build"
+}
