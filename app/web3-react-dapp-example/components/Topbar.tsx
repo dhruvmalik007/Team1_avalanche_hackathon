@@ -10,7 +10,7 @@ export default function Topbar() {
 
   return (
     <header className="topbar">
-      <Link href="/homepage" className="link">Environments Hub</Link>
+      <Link href="/" className="link">Environments Hub</Link>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         {authenticated ? (
           <>
