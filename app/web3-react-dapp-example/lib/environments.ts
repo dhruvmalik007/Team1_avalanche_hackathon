@@ -8,6 +8,7 @@ export type Environment = {
   version: string;
   updatedAt: string;
   costPerRunUSD?: number;
+  repoUrl?: string;
 };
 
 export const environments: Environment[] = [
@@ -21,6 +22,7 @@ export const environments: Environment[] = [
     version: '1.2.0',
     updatedAt: '2025-09-01T10:00:00Z',
     costPerRunUSD: 0.05,
+    repoUrl: 'https://github.com/PrimeIntellect-ai/verifiers',
   },
   {
     owner: 'vercel',
@@ -32,6 +34,7 @@ export const environments: Environment[] = [
     version: '0.7.3',
     updatedAt: '2025-08-28T18:00:00Z',
     costPerRunUSD: 0.12,
+    repoUrl: 'https://github.com/PrimeIntellect-ai/verifiers',
   },
   {
     owner: 'avalabs',
@@ -43,5 +46,6 @@ export const environments: Environment[] = [
     version: '0.3.1',
     updatedAt: '2025-08-16T12:00:00Z',
     costPerRunUSD: 0.19,
+    repoUrl: 'https://github.com/ava-labs/subnet-evm',
   }
 ];

@@ -2,6 +2,8 @@
 
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useState } from 'react';
+import Link from 'next/link';
+import { deployAndRegister } from '../../../../lib/registry';
 
 export default function NewEnvironment() {
   const { authenticated, login } = usePrivy();
@@ -11,6 +13,11 @@ export default function NewEnvironment() {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [desc, setDesc] = useState('');
+  const [repoUrl, setRepoUrl] = useState('');
+  const [tags, setTags] = useState('');
+  const [saved, setSaved] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
 
   if (!authenticated) {
     return (
@@ -40,11 +47,82 @@ export default function NewEnvironment() {
             <input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="owner/slug" style={inputStyle} />
           </label>
           <label>
+            <div style={{ opacity: 0.8, marginBottom: 6 }}>Repository URL (optional)</div>
+            <input value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} placeholder="https://github.com/user/repo" style={inputStyle} />
+          </label>
+          <label>
+            <div style={{ opacity: 0.8, marginBottom: 6 }}>Tags (comma separated)</div>
+            <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="math, eval, train" style={inputStyle} />
+          </label>
+          <label>
             <div style={{ opacity: 0.8, marginBottom: 6 }}>Description</div>
             <textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Short description..." style={{ ...inputStyle, minHeight: 120 }} />
           </label>
           <div>
-            <button className="btn btn-accent">Save</button>
+            <button className="btn btn-accent" disabled={pending} onClick={async () => {
+              if (!slug || !name) return;
+              try {
+                setPending(true);
+                setStatus('Preparing deployment...');
+
+                // Generate simple defaults
+                const envId = slug; // owner/slug style supported
+                const envPath = slug || 'env/path';
+                const commitHash = randomHex(16);
+                const metadataCID = `bafy${randomHex(10)}`;
+
+                // Deploy (if bytecode provided) and register
+                const res = await deployAndRegister({
+                  envId,
+                  repoUrl: repoUrl || '',
+                  envPath,
+                  commitHash,
+                  metadataCID,
+                });
+
+                setStatus(`Registered. Tx: ${res.registerTxHash}`);
+
+                // Persist to profile format (extra fields tolerated)
+                const now = new Date().toISOString();
+                const item = {
+                  owner: primaryAddress ?? 'user',
+                  slug,
+                  name,
+                  description: desc,
+                  tags: (tags || '')
+                    .split(',')
+                    .map((t) => t.trim())
+                    .filter(Boolean),
+                  stars: 0,
+                  version: '0.1.0',
+                  updatedAt: now,
+                  repoUrl: repoUrl || undefined,
+                  registryAddress: res.registryAddress,
+                  registerTxHash: res.registerTxHash,
+                  deployTxHash: res.deployTxHash,
+                  commitHash,
+                  envPath,
+                };
+                const key = `my_envs_${primaryAddress ?? 'user'}`;
+                const prev = JSON.parse(localStorage.getItem(key) || '[]');
+                const next = [item, ...prev];
+                localStorage.setItem(key, JSON.stringify(next));
+                setSaved(now);
+              } catch (e: any) {
+                console.error('save error', e);
+                setStatus(e?.message || 'Error');
+              } finally {
+                setPending(false);
+              }
+            }}>Save</button>
+            {pending && (
+              <div style={{ marginTop: 10, opacity: 0.85 }}>Deploying & registering on-chain... {status}</div>
+            )}
+            {saved && !pending && (
+              <div style={{ marginTop: 10, opacity: 0.85 }}>
+                Saved! View it on your <Link className="link" href="/dashboard/profile">Profile</Link>.
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -61,3 +139,42 @@ const inputStyle: React.CSSProperties = {
   color: 'white',
   width: '100%'
 };
+
+function onSave(
+  { name, slug, desc, repoUrl, tags, owner }: { name: string; slug: string; desc: string; repoUrl?: string; tags?: string; owner: string },
+  setSaved: (s: string) => void
+) {
+  const now = new Date().toISOString();
+  const item = {
+    owner,
+    slug,
+    name,
+    description: desc,
+    tags: (tags || '')
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean),
+    stars: 0,
+    version: '0.1.0',
+    updatedAt: now,
+    repoUrl: repoUrl || undefined,
+  };
+  try {
+    const key = `my_envs_${owner}`;
+    const prev = JSON.parse(localStorage.getItem(key) || '[]');
+    const next = [item, ...prev];
+    localStorage.setItem(key, JSON.stringify(next));
+    setSaved(now);
+  } catch (e) {
+    console.error('save error', e);
+  }
+}
+
+function randomHex(bytes: number) {
+  const arr = new Uint8Array(bytes);
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) crypto.getRandomValues(arr);
+  else for (let i = 0; i < bytes; i++) arr[i] = Math.floor(Math.random() * 256);
+  return Array.from(arr)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
