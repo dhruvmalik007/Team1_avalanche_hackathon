@@ -1,61 +1,24 @@
 {
-  "version": "0.0.0",
+  "name": "avalanche-dapp-sdks",
   "private": true,
   "license": "BSD-3-Clause",
-  "dependencies": {
-    "@avalabs/types": "2.4.0"
-  },
+  "workspaces": [
+    "app/*"
+  ],
   "scripts": {
-    "bootstrap": "yarn install && lerna exec yarn install && yarn build",
-    "build": "lerna run build",
-    "lint": "lerna run lint",
-    "test": "lerna run test",
-    "build:prod": "learn run build:prod",
-    "prepare": "husky install",
-    "commit": "cz"
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
   },
   "devDependencies": {
-    "@types/node": "16.11.12",
-    "@typescript-eslint/eslint-plugin": "5.10.1",
-    "@typescript-eslint/parser": "5.10.1",
-    "cz-conventional-changelog": "3.3.0",
-    "eslint": "8.7.0",
-    "eslint-config-prettier": "8.3.0",
-    "eslint-plugin-prettier": "4.0.0",
-    "eslint-plugin-react": "7.28.0",
-    "eslint-plugin-react-hooks": "4.3.0",
-    "husky": "7.0.4",
-    "lerna": "4.0.0",
-    "lint-staged": "12.1.2",
-    "prettier": "2.5.1",
-    "typescript": "4.5.4",
-    "@rollup/plugin-json": "4.1.0",
-    "@rollup/plugin-typescript": "8.2.1",
-    "@zerollup/ts-transform-paths": "1.7.18",
-    "rollup": "2.47.0",
-    "rollup-plugin-commonjs": "10.1.0",
-    "rollup-plugin-delete": "2.0.0",
-    "rollup-plugin-typescript2": "0.31.0",
-    "ttypescript": "1.5.15"
+    "turbo": "^2.3.0",
+    "typescript": "^5.4.5",
+    "eslint": "^9.3.0",
+    "prettier": "^3.3.2"
   },
-  "workspaces": [
-    "packages/*"
-  ],
-  "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown",
-    "*.{ts,tsx}": "eslint --cache --fix"
+  "engines": {
+    "node": ">=18.18.0"
   },
-  "volta": {
-    "node": "16.19.1",
-    "yarn": "1.22.19"
-  },
-  "resolutions": {
-    "parse-path": "5.0.0",
-    "nth-check": "2.0.1"
-  },
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
-  }
+  "packageManager": "yarn@1.22.19"
 }

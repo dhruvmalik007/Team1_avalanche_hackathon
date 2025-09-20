@@ -1,8 +1,0 @@
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "plugins": [{ "transform": "@zerollup/ts-transform-paths" }]
-  },
-  "include": ["src"]
-}
