@@ -4,6 +4,7 @@ const nextConfig = {
     styledComponents: true,
   },
   reactStrictMode: true,
+  transpilePackages: ['@rlhub/api-types'],
 };
 
 module.exports = nextConfig;

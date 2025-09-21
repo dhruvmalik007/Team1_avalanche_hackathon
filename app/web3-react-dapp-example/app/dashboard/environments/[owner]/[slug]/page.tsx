@@ -7,7 +7,7 @@ import { useWallets } from '@privy-io/react-auth';
 import { environments } from '../../../../../lib/environments';
 import { parseGithubRepo, fetchRepoMeta, fetchRepoTags, listRepoContents } from '../../../../../lib/github';
 import { timeAgo } from '../../../../../lib/time';
-import { submitRun } from '../../../../lib/api';
+import { submitRun } from '../../../../../lib/api';
 
 export default function EnvironmentDetails() {
   const { owner, slug } = useParams<{ owner: string; slug: string }>();

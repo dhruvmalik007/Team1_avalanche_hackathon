@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getRun } from '../../../_mockdb';
+import { getRun } from '../../_mockdb';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
