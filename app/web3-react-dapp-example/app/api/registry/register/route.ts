@@ -3,9 +3,17 @@ import { Address, Hex, createWalletClient, http, parseAbi } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { avalanche } from 'viem/chains';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const abi = parseAbi([
   'function registerEnvironment(string envId, string repoUrl, string envPath, string commitHash, string metadataCID) external',
 ]);
+
+export async function GET() {
+  return NextResponse.json({ ok: true });
+}
 
 export async function POST(req: NextRequest) {
   try {
