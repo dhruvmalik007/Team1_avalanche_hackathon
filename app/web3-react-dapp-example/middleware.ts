@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 // Standardize legacy paths and root to Next.js App Router counterparts
-// - "/"                           -> "/dashboard/environments"
+// - "/"                           -> "/homepage"
 // - "/environments"              -> "/dashboard/environments"
 // - "/environments/new"          -> "/dashboard/environments/new"
 // - "/environments/:owner/:slug" -> "/dashboard/environments/:owner/:slug"
@@ -12,7 +12,7 @@ export function middleware(req: NextRequest) {
 
   // Redirect root to hub
   if (pathname === '/') {
-    url.pathname = '/dashboard/environments';
+    url.pathname = '/homepage';
     return NextResponse.redirect(url);
   }
 

@@ -13,6 +13,11 @@ export interface EnvironmentDTO {
   updatedAt?: number;
 }
 
+export interface Progress {
+  pct: number;
+  msg?: string;
+}
+
 export interface SubmitRunRequest {
   envId: string;
   commit?: string;
@@ -30,6 +35,7 @@ export interface RunRecord {
   envId: string;
   userId: string;
   status: RunStatus;
+  progress?: Progress;
   score?: number;
   artifacts?: { resultsUrl?: string; hash?: string };
   onChain?: boolean;

@@ -19,18 +19,11 @@ contract EnvRegistryTest is Test {
         reg = new EnvRegistry();
     }
 
-    function test_registerEnvironment_setsStorageAndEmits() public {
-        string memory envId = "will/wordle";
-        string memory repoUrl = "https://github.com/PrimeIntellect-ai/verifiers";
-        string memory envPath = "environments/wordle";
-        string memory commitHash = "deadbeefcafebabe";
-        string memory metadataCID = "bafy...cid";
-
+    function test_registerEnvironment_setsStorageAndEmits(string memory envId, string memory repoUrl, string memory envPath, string memory commitHash, string memory metadataCID) public {
         vm.prank(alice);
         vm.expectEmit(true, true, true, true, address(reg));
         emit EnvironmentRegistered(envId, repoUrl, envPath, commitHash, metadataCID, alice);
         reg.registerEnvironment(envId, repoUrl, envPath, commitHash, metadataCID);
-
         (
             string memory rRepo,
             string memory rPath,
@@ -46,9 +39,7 @@ contract EnvRegistryTest is Test {
         assertEq(rOwner, alice, "owner");
     }
 
-    function test_submitRun_emitsEvent() public {
-        string memory envId = "will/wordle";
-        string memory runId = "run-123";
+    function test_submitRun_emitsEvent(string memory envId, string memory runId, bytes32 artifactsHash, bytes32 configHash, uint256 score, address verifier, bytes memory verifierSig) public {
         bytes32 artifactsHash = keccak256(abi.encodePacked("results.json"));
         bytes32 configHash = keccak256(abi.encodePacked("config"));
         uint256 score = 87;

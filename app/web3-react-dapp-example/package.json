@@ -15,16 +15,15 @@
     "react-dom": "18.2.0",
     "styled-components": "5.3.8",
     "@privy-io/react-auth": "3.0.1",
-    "@rlhub/api-types": "0.0.1",
-    "@rlhub/api-client": "0.0.1",
-    "viem": "^2.12.0"
+    "viem": "^2.12.0",
+    "@rlhub/api-types": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
     "@types/react": "^18.2.75",
     "@types/react-dom": "^18.2.24",
     "@types/styled-components": "^5.1.34",
-    "eslint": "^9.3.0",
+    "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.5",
     "typescript": "^5.4.5"
   }

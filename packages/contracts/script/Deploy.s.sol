@@ -3,7 +3,7 @@ pragma solidity >=0.8.29 <0.9.0;
 
 import {Script} from "forge-std/src/Script.sol";
 import {console2} from "forge-std/src/console2.sol";
-import {EnvRegistry} from "../src/environment_receipt.sol";
+import {EnvRegistry} from "src/environment_receipt.sol";
 
 /// @notice Deploys EnvRegistry and optionally registers an environment.
 /// Env vars (all optional, but useful for one-shot registration):

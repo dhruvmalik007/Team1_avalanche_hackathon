@@ -1,21 +1,24 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useWallets } from '@privy-io/react-auth';
 import { environments } from '../../../../../lib/environments';
 import { parseGithubRepo, fetchRepoMeta, fetchRepoTags, listRepoContents } from '../../../../../lib/github';
 import { timeAgo } from '../../../../../lib/time';
+import { submitRun } from '../../../../lib/api';
 
 export default function EnvironmentDetails() {
   const { owner, slug } = useParams<{ owner: string; slug: string }>();
   const env = environments.find((e) => e.owner === owner && e.slug === slug);
   const { wallets } = useWallets();
   const primaryAddress = wallets[0]?.address;
+  const router = useRouter();
 
   const [repoInfo, setRepoInfo] = useState<{ version?: string; lastPush?: string; stars?: number }>();
   const [files, setFiles] = useState<{ name: string; type: string }[]>([]);
+  const [isSubmitting, setSubmitting] = useState(false);
 
   if (!env) {
     return <div>Environment not found.</div>;
@@ -37,25 +40,19 @@ export default function EnvironmentDetails() {
     return () => { cancelled = true; };
   }, [env.repoUrl, env.version]);
 
-  function runDemo() {
+  async function runEval() {
+    if (!env) return;
     try {
-      const user = primaryAddress ?? 'user';
-      const runId = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
-      const key = `my_runs_${user}`;
-      const prev = JSON.parse(localStorage.getItem(key) || '[]');
-      const rec = {
-        runId,
-        envId: `${env.owner}/${env.slug}`,
-        name: env.name,
-        status: 'COMPLETED',
-        score: Math.round(Math.random() * 1000) / 1000,
-        artifactsHash: 'demo-hash',
-        createdAt: new Date().toISOString(),
-      };
-      localStorage.setItem(key, JSON.stringify([rec, ...prev]));
-      alert('Demo run recorded in your History.');
+      setSubmitting(true);
+      const envId = `${env.owner}/${env.slug}`;
+      const userId = primaryAddress || 'demo-user';
+      const resp = await submitRun({ envId, onChain: false, params: { n: 10, rollouts: 1 }, userId });
+      router.push(`/dashboard/runs/${encodeURIComponent(resp.runId)}`);
     } catch (e) {
       console.error(e);
+      alert('Failed to start run (mock).');
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -90,7 +87,7 @@ export default function EnvironmentDetails() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button className="btn btn-accent" onClick={runDemo}>Run Eval (demo)</button>
+                <button className="btn btn-accent" onClick={runEval} disabled={isSubmitting}>{isSubmitting ? 'Starting…' : 'Run Eval (mock)'}</button>
                 {env.repoUrl && (
                   <Link className="btn" href={env.repoUrl} target="_blank">Open Repo</Link>
                 )}
