@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import type { RunRecord } from '@rlhub/api-types';
-import { getRun } from '../../../../lib/api';
+import { getRun } from '@/lib/api';
 import Link from 'next/link';
 
 export default function RunDetailsPage() {

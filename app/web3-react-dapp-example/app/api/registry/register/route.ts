@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Address, Hex, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { envRegistryAbi } from 'web3-react-dapp-example/lib/contract';
-import { getChain, getRpcUrl } from 'web3-react-dapp-example/lib/contract';
+import { envRegistryAbi } from '@/lib/contract';
+import { getChain, getRpcUrl } from '@/lib/contract';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

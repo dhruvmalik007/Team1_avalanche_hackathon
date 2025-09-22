@@ -1,7 +1,21 @@
 import { avalanche, avalancheFuji, type Chain } from 'viem/chains'
-import artifact from '@prb/foundry-template/out/environment_receipt.sol/EnvRegistry.json'
-
-export const envRegistryAbi = (artifact as any).abi as any[]
+// Minimal ABI required by the dapp. Avoids requiring Foundry-built artifacts at deploy time.
+// If you later want the full ABI, you can swap this back to a JSON import from the contracts package.
+export const envRegistryAbi = [
+  {
+    type: 'function',
+    name: 'registerEnvironment',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'envId', type: 'string' },
+      { name: 'repoUrl', type: 'string' },
+      { name: 'envPath', type: 'string' },
+      { name: 'commitHash', type: 'string' },
+      { name: 'metadataCID', type: 'string' }
+    ],
+    outputs: []
+  }
+] as const satisfies any[]
 
 export function getChain(): Chain {
   const chainName = (process.env.NEXT_PUBLIC_CHAIN || '').toLowerCase()

@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useWallets } from '@privy-io/react-auth';
 import type { RunRecord } from '@rlhub/api-types';
-import { listUserRuns } from '../../../lib/api';
-import { timeAgo } from '../../../lib/time';
+import { listUserRuns } from '@/lib/api';
+import { timeAgo } from '@/lib/time';
 
 export default function HistoryPage() {
   const { wallets } = useWallets();
