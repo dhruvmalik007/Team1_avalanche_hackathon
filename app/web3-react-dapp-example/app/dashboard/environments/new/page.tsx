@@ -1,8 +1,9 @@
 'use client';
 
 import { usePrivy, useWallets } from '@privy-io/react-auth';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Button } from '../../../../components/ui/button';
 import { deployAndRegister } from '../../../../lib/registry';
 
 export default function NewEnvironment() {
@@ -14,20 +15,48 @@ export default function NewEnvironment() {
   const [slug, setSlug] = useState('');
   const [desc, setDesc] = useState('');
   const [repoUrl, setRepoUrl] = useState('');
+  const [envPath, setEnvPath] = useState('');
+  const [commitHash, setCommitHash] = useState('');
   const [tags, setTags] = useState('');
   const [saved, setSaved] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [lastTx, setLastTx] = useState<string | null>(null);
 
+  // Templates from GitHub
+  type EnvTemplate = { name: string; repoUrl: string; envPath: string; htmlUrl?: string };
+  type ConfigTemplate = { name: string; path: string; htmlUrl?: string; downloadUrl?: string };
+  const [envTemplates, setEnvTemplates] = useState<EnvTemplate[]>([]);
+  const [configTemplates, setConfigTemplates] = useState<ConfigTemplate[]>([]);
+  const [selectedEnvTemplate, setSelectedEnvTemplate] = useState<string>('');
+  const [selectedConfigTemplate, setSelectedConfigTemplate] = useState<string>('');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/templates', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Failed to load templates');
+        const data = await res.json();
+        if (cancelled) return;
+        setEnvTemplates(data?.verifiers || []);
+        setConfigTemplates(data?.primeRl || []);
+      } catch (e: any) {
+        // Non-fatal: allow manual input
+        console.warn('template load error', e?.message || e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   if (!authenticated) {
     return (
       <div className="card" style={{ maxWidth: 640, margin: '24px auto' }}>
         <h2>Sign in required</h2>
         <p style={{ opacity: 0.8 }}>Please sign in with Privy (wallet or OAuth) to continue.</p>
-        <button className="btn btn-accent" onClick={() => login()}>
+        <Button variant="accent" onClick={() => login()}>
           Sign in with Privy
-        </button>
+        </Button>
       </div>
     );
   }
@@ -39,6 +68,44 @@ export default function NewEnvironment() {
 
       <div className="card" style={{ maxWidth: 720 }}>
         <div style={{ display: 'grid', gap: 12 }}>
+          {/* Template pickers */}
+          <label>
+            <div style={{ opacity: 0.8, marginBottom: 6 }}>Environment Template (Verifiers)</div>
+            <select
+              value={selectedEnvTemplate}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedEnvTemplate(val);
+                const t = envTemplates.find((x) => x.name === val);
+                if (t) {
+                  setRepoUrl(t.repoUrl);
+                  setEnvPath(t.envPath);
+                  if (!name) setName(t.name.replace(/[_-]/g, ' '));
+                  if (!slug) setSlug(t.name);
+                }
+              }}
+              style={inputStyle}
+            >
+              <option value="">— Select a template (optional) —</option>
+              {envTemplates.map((t) => (
+                <option key={t.name} value={t.name}>{t.name}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <div style={{ opacity: 0.8, marginBottom: 6 }}>Config Template (prime-rl) — optional</div>
+            <select
+              value={selectedConfigTemplate}
+              onChange={(e) => setSelectedConfigTemplate(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">— None —</option>
+              {configTemplates.map((c) => (
+                <option key={c.path} value={c.path}>{c.name}</option>
+              ))}
+            </select>
+          </label>
+
           <label>
             <div style={{ opacity: 0.8, marginBottom: 6 }}>Name</div>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="My cool env" style={inputStyle} />
@@ -52,6 +119,14 @@ export default function NewEnvironment() {
             <input value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} placeholder="https://github.com/user/repo" style={inputStyle} />
           </label>
           <label>
+            <div style={{ opacity: 0.8, marginBottom: 6 }}>Environment Path in Repo (e.g. environments/math_python)</div>
+            <input value={envPath} onChange={(e) => setEnvPath(e.target.value)} placeholder="environments/example" style={inputStyle} />
+          </label>
+          <label>
+            <div style={{ opacity: 0.8, marginBottom: 6 }}>Commit Hash (optional)</div>
+            <input value={commitHash} onChange={(e) => setCommitHash(e.target.value)} placeholder="git commit SHA (optional)" style={inputStyle} />
+          </label>
+          <label>
             <div style={{ opacity: 0.8, marginBottom: 6 }}>Tags (comma separated)</div>
             <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="math, eval, train" style={inputStyle} />
           </label>
@@ -60,16 +135,16 @@ export default function NewEnvironment() {
             <textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Short description..." style={{ ...inputStyle, minHeight: 120 }} />
           </label>
           <div>
-            <button className="btn btn-accent" disabled={pending} onClick={async () => {
+            <Button variant="accent" isLoading={pending} disabled={pending} onClick={async () => {
               if (!slug || !name) return;
               try {
                 setPending(true);
                 setStatus('Preparing deployment...');
 
-                // Generate simple defaults
+                // Generate values
                 const envId = slug; // owner/slug style supported
-                const envPath = slug || 'env/path';
-                const commitHash = randomHex(16);
+                const envPathValue = envPath || (slug ? `environments/${slug.split('/').slice(-1)[0]}` : 'env/path');
+                const commitHashValue = commitHash || randomHex(16);
                 const metadataCID = `bafy${randomHex(10)}`;
 
                 // Choose server-signer vs client wallet flow
@@ -85,8 +160,8 @@ export default function NewEnvironment() {
                     body: JSON.stringify({
                       envId,
                       repoUrl: repoUrl || '',
-                      envPath,
-                      commitHash,
+                      envPath: envPathValue,
+                      commitHash: commitHashValue,
                       metadataCID,
                       registryAddress: process.env.NEXT_PUBLIC_REGISTRY_ADDRESS,
                     }),
@@ -98,12 +173,17 @@ export default function NewEnvironment() {
                   setStatus(`Registered. Tx: ${registerTxHash}`);
                 } else {
                   // Deploy (if bytecode provided) and register via wallet
+                  const provider = await wallets[0]?.getEthereumProvider?.();
+                  if (!provider) {
+                    throw new Error('No EIP-1193 provider from wallet. Ensure a wallet is connected or enable server signer.');
+                  }
                   const res = await deployAndRegister({
                     envId,
                     repoUrl: repoUrl || '',
-                    envPath,
-                    commitHash,
+                    envPath: envPathValue,
+                    commitHash: commitHashValue,
                     metadataCID,
+                    provider,
                   });
                   registryAddress = res.registryAddress;
                   registerTxHash = res.registerTxHash as string;
@@ -129,8 +209,10 @@ export default function NewEnvironment() {
                   registryAddress,
                   registerTxHash,
                   deployTxHash,
-                  commitHash,
-                  envPath,
+                  commitHash: commitHashValue,
+                  envPath: envPathValue,
+                  template: selectedEnvTemplate || undefined,
+                  configTemplate: selectedConfigTemplate || undefined,
                 };
                 const key = `my_envs_${primaryAddress ?? 'user'}`;
                 const prev = JSON.parse(localStorage.getItem(key) || '[]');
@@ -144,7 +226,7 @@ export default function NewEnvironment() {
               } finally {
                 setPending(false);
               }
-            }}>Save</button>
+            }}>Save</Button>
             {pending && (
               <div style={{ marginTop: 10, opacity: 0.85 }}>Deploying & registering on-chain... {status}</div>
             )}

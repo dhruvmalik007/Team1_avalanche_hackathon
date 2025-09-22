@@ -8,6 +8,7 @@ import { environments } from '../../../../../lib/environments';
 import { parseGithubRepo, fetchRepoMeta, fetchRepoTags, listRepoContents } from '../../../../../lib/github';
 import { timeAgo } from '../../../../../lib/time';
 import { submitRun } from '../../../../../lib/api';
+import { Button } from '../../../../../components/ui/button';
 
 export default function EnvironmentDetails() {
   const { owner, slug } = useParams<{ owner: string; slug: string }>();
@@ -87,7 +88,9 @@ export default function EnvironmentDetails() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button className="btn btn-accent" onClick={runEval} disabled={isSubmitting}>{isSubmitting ? 'Starting…' : 'Run Eval (mock)'}</button>
+                <Button variant="accent" onClick={runEval} isLoading={isSubmitting} disabled={isSubmitting}>
+                  Run Eval (mock)
+                </Button>
                 {env.repoUrl && (
                   <Link className="btn" href={env.repoUrl} target="_blank">Open Repo</Link>
                 )}
