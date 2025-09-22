@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { environments as initialData, Environment } from 'web3-react-dapp-example/lib/environments';
+import { environments as initialData, Environment } from '@/lib/environments';
 import { useRouter } from 'next/navigation';
 
 export default function EnvironmentsHub() {

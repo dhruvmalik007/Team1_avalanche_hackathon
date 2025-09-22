@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
-import { timeAgo } from '../../../lib/time';
-import { parseGithubRepo, fetchRepoMeta, fetchRepoTags } from '../../../lib/github';
+import { timeAgo } from '@/lib/time';
+import { parseGithubRepo, fetchRepoMeta, fetchRepoTags } from '@/lib/github';
 
 type MyEnv = {
   owner: string;

@@ -3,8 +3,8 @@
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '../../../../components/ui/button';
-import { deployAndRegister } from '../../../../lib/registry';
+import { Button } from '@/components/ui/button';
+import { deployAndRegister } from '@/lib/registry';
 
 export default function NewEnvironment() {
   const { authenticated, login } = usePrivy();
