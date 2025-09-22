@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { listRepoContents, type RepoContent } from '../../../lib/github';
+import { listRepoContents, type RepoContent } from 'web3-react-dapp-example/lib/github';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

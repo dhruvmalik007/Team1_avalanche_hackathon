@@ -4,11 +4,11 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useWallets } from '@privy-io/react-auth';
-import { environments } from '../../../../../lib/environments';
-import { parseGithubRepo, fetchRepoMeta, fetchRepoTags, listRepoContents } from '../../../../../lib/github';
-import { timeAgo } from '../../../../../lib/time';
-import { submitRun } from '../../../../../lib/api';
-import { Button } from '../../../../../components/ui/button';
+import { environments } from 'web3-react-dapp-example/lib/environments';
+import { parseGithubRepo, fetchRepoMeta, fetchRepoTags, listRepoContents } from 'web3-react-dapp-example/lib/github';
+import { timeAgo } from 'web3-react-dapp-example/lib/time';
+import { submitRun } from 'web3-react-dapp-example/lib/api';
+import { Button } from 'web3-react-dapp-example/components/ui/button';
 
 export default function EnvironmentDetails() {
   const { owner, slug } = useParams<{ owner: string; slug: string }>();

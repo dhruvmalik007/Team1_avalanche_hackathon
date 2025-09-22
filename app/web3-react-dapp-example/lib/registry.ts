@@ -101,7 +101,9 @@ export async function deployAndRegister(args: DeployAndRegisterArgs): Promise<De
       bytecode: envRegistryBytecode,
       account: from!,
       chain: avalancheFuji,
-      args: []
+      args: [
+        
+      ]
     });
     deployTxHash = deployHash;
     // wait for deployment receipt

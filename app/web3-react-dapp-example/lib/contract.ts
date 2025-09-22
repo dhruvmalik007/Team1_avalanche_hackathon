@@ -1,5 +1,5 @@
 import { avalanche, avalancheFuji, type Chain } from 'viem/chains'
-import artifact from '../../../packages/contracts/out/environment_receipt.sol/EnvRegistry.json'
+import artifact from '@prb/foundry-template/out/environment_receipt.sol/EnvRegistry.json'
 
 export const envRegistryAbi = (artifact as any).abi as any[]
 
