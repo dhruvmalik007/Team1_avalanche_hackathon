@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Address, Hex, createWalletClient, http, parseAbi } from 'viem';
+import { Address, Hex, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { avalanche } from 'viem/chains';
+import { envRegistryAbi } from '../../../../lib/contract';
+import { getChain, getRpcUrl } from '../../../../lib/contract';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-const abi = parseAbi([
-  'function registerEnvironment(string envId, string repoUrl, string envPath, string commitHash, string metadataCID) external',
-]);
 
 export async function GET() {
   return NextResponse.json({ ok: true });
@@ -25,20 +22,22 @@ export async function POST(req: NextRequest) {
     if (!key) return NextResponse.json({ error: 'Server deployer key not configured' }, { status: 500 });
 
     const rpcUrl = process.env.NEXT_PRIVATE_RPC_URL || process.env.RPC_URL;
-    if (!rpcUrl) return NextResponse.json({ error: 'RPC URL not configured' }, { status: 500 });
 
     const address: Address | undefined = (registryAddress || process.env.NEXT_PUBLIC_REGISTRY_ADDRESS) as Address | undefined;
     if (!address) return NextResponse.json({ error: 'Registry address missing' }, { status: 400 });
 
+    const chain = getChain();
+
     const account = privateKeyToAccount((key.startsWith('0x') ? key : `0x${key}`) as Hex);
-    const client = createWalletClient({ account, chain: avalanche, transport: http(rpcUrl) });
+    const resolvedRpc = rpcUrl || getRpcUrl(chain);
+    const client = createWalletClient({ account, chain, transport: http(resolvedRpc) });
 
     const hash = await client.writeContract({
       address,
-      abi,
+      abi: envRegistryAbi as any,
       functionName: 'registerEnvironment',
       args: [envId, repoUrl, envPath, commitHash, metadataCID],
-      chain: avalanche,
+      chain,
       account,
     });
 

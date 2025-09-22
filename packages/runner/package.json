@@ -1,0 +1,19 @@
+{
+  "name": "@rlhub/runner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "docker:build": "docker build -t rlhub-runner:latest ."
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.637.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

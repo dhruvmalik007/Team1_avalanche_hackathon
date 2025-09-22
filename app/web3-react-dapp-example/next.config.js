@@ -4,7 +4,8 @@ const nextConfig = {
     styledComponents: true,
   },
   reactStrictMode: true,
-  transpilePackages: ['@rlhub/api-types'],
+  experimental: { externalDir: true },
+  transpilePackages: ['@rlhub/api-types', '@rlhub/api-client', '@prb/foundry-template'],
 };
 
 module.exports = nextConfig;

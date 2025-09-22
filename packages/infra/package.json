@@ -1,0 +1,23 @@
+{
+  "name": "@rlhub/infra",
+  "version": "0.1.0",
+  "private": true,
+  "license": "BSD-3-Clause",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "synth": "cdk synth",
+    "bootstrap": "cdk bootstrap",
+    "deploy": "cdk deploy --no-previous-parameters",
+    "deploy:verbose": "cdk deploy --no-previous-parameters -v",
+    "diff": "cdk diff"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.151.0",
+    "constructs": "^10.3.0"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.151.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

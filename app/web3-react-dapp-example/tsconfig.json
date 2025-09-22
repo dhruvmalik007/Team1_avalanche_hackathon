@@ -10,7 +10,11 @@
     ],
     "allowJs": true,
     "isolatedModules": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
   "include": [
     "next-env.d.ts",
