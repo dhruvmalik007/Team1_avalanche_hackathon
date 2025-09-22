@@ -21,3 +21,9 @@ TODO.md
 .turbo
 
 **/.env
+**/cdk.context.json
+**/cdk.json
+**/cdk.out
+
+
+.env.local
