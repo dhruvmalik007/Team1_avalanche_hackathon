@@ -26,22 +26,23 @@ function genRunId() { return `run_${Date.now().toString(36)}_${Math.random().toS
 export class RlHubInfraClient {
   private readonly region: string
   private readonly bucketName: string
-  private readonly queueUrl: string
+  private readonly queueUrl: string | undefined
   private readonly s3: S3Client
   private readonly sqs: SQSClient
 
   constructor(cfg?: Partial<InfraClientConfig>) {
     this.region = cfg?.region || process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'us-east-1'
     this.bucketName = (cfg?.bucketName || process.env.NEXT_PRIVATE_S3_ARTIFACTS_BUCKET || '').trim()
-    this.queueUrl = (cfg?.queueUrl || process.env.NEXT_PRIVATE_SQS_RUNS_QUEUE_URL || '').trim()
+    this.queueUrl = (cfg?.queueUrl || process.env.NEXT_PRIVATE_SQS_RUNS_QUEUE_URL || '').trim() || undefined
     if (!this.bucketName) throw new Error('Missing artifacts bucket name (NEXT_PRIVATE_S3_ARTIFACTS_BUCKET)')
-    if (!this.queueUrl) throw new Error('Missing runs queue URL (NEXT_PRIVATE_SQS_RUNS_QUEUE_URL)')
     this.s3 = new S3Client({ region: this.region })
     this.sqs = new SQSClient({ region: this.region })
   }
 
   private statusKey(runId: string) { return `runs/${runId}/status.json` }
   private userIndexKey(userId: string, runId: string) { return `users/${userId}/runs/${runId}.json` }
+  private userEnvKey(userId: string, envId: string) { return `users/${userId}/envs/${encodeURIComponent(envId)}.json` }
+  private envGlobalKey(envId: string) { return `environments/${encodeURIComponent(envId)}/metadata.json` }
 
   async submitRun(body: SubmitRunRequest & { userId: string }): Promise<SubmitRunResponse> {
     const runId = genRunId()
@@ -49,6 +50,7 @@ export class RlHubInfraClient {
     const msgBody = JSON.stringify({ ...body, runId, createdAt })
 
     // 1) Enqueue message to SQS (EventBridge Pipe will start SFN)
+    if (!this.queueUrl) throw new Error('Missing runs queue URL (NEXT_PRIVATE_SQS_RUNS_QUEUE_URL)')
     await this.sqs.send(new SendMessageCommand({ QueueUrl: this.queueUrl, MessageBody: msgBody }))
 
     // 2) Persist initial status in S3 so the UI can poll status immediately
@@ -103,6 +105,40 @@ export class RlHubInfraClient {
     }
     // Sort newest first
     results.sort((a,b) => (b.createdAt||0) - (a.createdAt||0))
+    return results
+  }
+
+  // Environments persistence
+  async saveEnvironmentForUser(userId: string, env: EnvironmentDTO & Record<string, any>): Promise<void> {
+    const body = Buffer.from(JSON.stringify(env))
+    await this.s3.send(new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: this.userEnvKey(userId, env.envId),
+      Body: body,
+      ContentType: 'application/json',
+    }))
+    await this.s3.send(new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: this.envGlobalKey(env.envId),
+      Body: body,
+      ContentType: 'application/json',
+    }))
+  }
+
+  async listUserEnvironments(userId: string, limit = 100): Promise<(EnvironmentDTO & Record<string, any>)[]> {
+    const prefix = `users/${userId}/envs/`
+    const listed = await this.s3.send(new ListObjectsV2Command({ Bucket: this.bucketName, Prefix: prefix, MaxKeys: limit }))
+    const keys = (listed.Contents || []).map(o => o.Key!).filter(Boolean)
+    const results: (EnvironmentDTO & Record<string, any>)[] = []
+    for (const key of keys) {
+      try {
+        const obj = await this.s3.send(new GetObjectCommand({ Bucket: this.bucketName, Key: key }))
+        const txt = await streamToString(obj.Body as any)
+        results.push(JSON.parse(txt))
+      } catch (e) {
+        // best-effort: skip unreadable entries
+      }
+    }
     return results
   }
 }

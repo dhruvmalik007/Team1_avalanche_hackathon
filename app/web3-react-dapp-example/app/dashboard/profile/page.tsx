@@ -5,16 +5,18 @@ import Link from 'next/link';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { timeAgo } from '@/lib/time';
 import { parseGithubRepo, fetchRepoMeta, fetchRepoTags } from '@/lib/github';
+import { listUserEnvironments } from '@/lib/api';
 
 type MyEnv = {
-  owner: string;
-  slug: string;
+  envId?: string; // owner/slug
+  owner?: string;
+  slug?: string;
   name: string;
-  description: string;
+  description?: string;
   tags: string[];
-  stars: number;
-  version: string;
-  updatedAt: string;
+  stars?: number;
+  version?: string;
+  updatedAt: string | number;
   repoUrl?: string;
   // Optional on-chain fields
   registryAddress?: string;
@@ -38,11 +40,38 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!primaryAddress) return;
-    try {
-      const key = `my_envs_${primaryAddress}`;
-      const data = JSON.parse(localStorage.getItem(key) || '[]');
-      setMyEnvs(data);
-    } catch {}
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await listUserEnvironments(primaryAddress, 100);
+        if (cancelled) return;
+        // Normalize into MyEnv shape
+        const norm: MyEnv[] = (data || []).map((e: any) => ({
+          envId: e.envId,
+          owner: e.owner,
+          slug: e.slug,
+          name: e.name,
+          description: e.description,
+          tags: e.tags || [],
+          stars: e.stars ?? 0,
+          version: e.version || '0.1.0',
+          updatedAt: e.updatedAt || Date.now(),
+          repoUrl: e.repoUrl,
+          registryAddress: e.registryAddress,
+          registerTxHash: e.registerTxHash,
+          deployTxHash: e.deployTxHash,
+        }));
+        setMyEnvs(norm);
+      } catch {
+        // Fallback to localStorage if backend is not configured
+        try {
+          const key = `my_envs_${primaryAddress}`;
+          const data = JSON.parse(localStorage.getItem(key) || '[]');
+          setMyEnvs(data);
+        } catch {}
+      }
+    })();
+    return () => { cancelled = true; };
   }, [primaryAddress]);
 
   return (

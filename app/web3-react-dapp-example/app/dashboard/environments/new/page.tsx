@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { deployAndRegister } from '@/lib/registry';
+import { saveEnvironment } from '@/lib/api';
 
 export default function NewEnvironment() {
   const { authenticated, login } = usePrivy();
@@ -142,7 +143,7 @@ export default function NewEnvironment() {
                 setStatus('Preparing deployment...');
 
                 // Generate values
-                const envId = slug; // owner/slug style supported
+                let envId_deploy = slug; // owner/slug style supported
                 const envPathValue = envPath || (slug ? `environments/${slug.split('/').slice(-1)[0]}` : 'env/path');
                 const commitHashValue = commitHash || randomHex(16);
                 const metadataCID = `bafy${randomHex(10)}`;
@@ -158,7 +159,7 @@ export default function NewEnvironment() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      envId,
+                      envId_deploy,
                       repoUrl: repoUrl || '',
                       envPath: envPathValue,
                       commitHash: commitHashValue,
@@ -172,6 +173,7 @@ export default function NewEnvironment() {
                   registerTxHash = data.registerTxHash;
                   setStatus(`Registered. Tx: ${registerTxHash}`);
                 } else {
+                  let envId = slug;
                   // Deploy (if bytecode provided) and register via wallet
                   const provider = await wallets[0]?.getEthereumProvider?.();
                   if (!provider) {
@@ -191,38 +193,85 @@ export default function NewEnvironment() {
                   setStatus(`Registered. Tx: ${registerTxHash}`);
                 }
 
-                // Persist to profile format (extra fields tolerated)
-                const now = new Date().toISOString();
-                const item = {
-                  owner: primaryAddress ?? 'user',
-                  slug,
+                // Persist to backend via API (S3 via infra) and fallback to localStorage
+                const nowIso = new Date().toISOString();
+                const nowSec = Math.floor(Date.now() / 1000);
+                const userId = primaryAddress ?? 'demo-user';
+                const envId = slug; // owner/slug
+                const envDto = {
+                  envId,
                   name,
                   description: desc,
                   tags: (tags || '')
                     .split(',')
                     .map((t) => t.trim())
                     .filter(Boolean),
-                  stars: 0,
-                  version: '0.1.0',
-                  updatedAt: now,
                   repoUrl: repoUrl || undefined,
+                  commit: commitHashValue,
+                  createdAt: nowSec,
+                  updatedAt: nowSec,
+                  // extra fields tolerated by backend
+                  owner: primaryAddress ?? 'user',
+                  slug,
                   registryAddress,
                   registerTxHash,
                   deployTxHash,
-                  commitHash: commitHashValue,
                   envPath: envPathValue,
                   template: selectedEnvTemplate || undefined,
                   configTemplate: selectedConfigTemplate || undefined,
-                };
-                const key = `my_envs_${primaryAddress ?? 'user'}`;
-                const prev = JSON.parse(localStorage.getItem(key) || '[]');
-                const next = [item, ...prev];
-                localStorage.setItem(key, JSON.stringify(next));
-                setSaved(now);
+                  version: '0.1.0',
+                  stars: 0,
+                  userId,
+                } as any;
+
+                try {
+                  await saveEnvironment(envDto);
+                } catch (e) {
+                  // Fallback to localStorage if backend save fails
+                  const key = `my_envs_${userId}`;
+                  const prev = JSON.parse(localStorage.getItem(key) || '[]');
+                  const next = [envDto, ...prev];
+                  localStorage.setItem(key, JSON.stringify(next));
+                }
+
+                setSaved(nowIso);
                 setLastTx(registerTxHash || null);
               } catch (e: any) {
                 console.error('save error', e);
                 setStatus(e?.message || 'Error');
+                // Persist a draft to backend even if on-chain registration failed
+                try {
+                  const nowIso = new Date().toISOString();
+                  const nowSec = Math.floor(Date.now() / 1000);
+                  const userId = primaryAddress ?? 'demo-user';
+                  const envId = slug;
+                  const envPathValue2 = envPath || (slug ? `environments/${slug.split('/').slice(-1)[0]}` : 'env/path');
+                  const commitHashValue2 = commitHash || randomHex(16);
+                  const envDto = {
+                    envId,
+                    name,
+                    description: desc,
+                    tags: (tags || '')
+                      .split(',')
+                      .map((t) => t.trim())
+                      .filter(Boolean),
+                    repoUrl: repoUrl || undefined,
+                    commit: commitHashValue2,
+                    createdAt: nowSec,
+                    updatedAt: nowSec,
+                    owner: primaryAddress ?? 'user',
+                    slug,
+                    envPath: envPathValue2,
+                    version: '0.1.0',
+                    stars: 0,
+                    userId,
+                    status: 'draft',
+                  } as any;
+                  await saveEnvironment(envDto);
+                  setSaved(nowIso);
+                } catch {
+                  // ignore secondary failure
+                }
               } finally {
                 setPending(false);
               }

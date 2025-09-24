@@ -36,9 +36,22 @@ export interface ButtonProps
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, isLoading = false, children, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'button'
+    // When composing with `asChild`, Radix Slot requires exactly ONE React element child.
+    // Do not prepend spinners or siblings in that mode.
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(buttonVariants({ variant, size }), className)}
+          // @ts-expect-error: Slot ref typing differs from HTMLButtonElement
+          ref={ref}
+          {...props}
+        >
+          {children}
+        </Slot>
+      )
+    }
     return (
-      <Comp
+      <button
         className={cn(buttonVariants({ variant, size }), className)}
         ref={ref}
         {...props}
@@ -50,7 +63,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           </svg>
         )}
         {children}
-      </Comp>
+      </button>
     )
   }
 )

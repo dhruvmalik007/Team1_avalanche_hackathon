@@ -17,6 +17,10 @@ export async function fetchEnvironments(): Promise<EnvironmentDTO[]> {
   return getJson<EnvironmentDTO[]>('/api/environments');
 }
 
+export async function saveEnvironment(body: any): Promise<{ ok: true }> {
+  return postJson<{ ok: true }>('/api/environments', body, 201);
+}
+
 export async function submitRun(body: SubmitRunRequest & { userId?: string }): Promise<SubmitRunResponse> {
   return postJson<SubmitRunResponse>('/api/runs', body, 202);
 }
@@ -27,4 +31,8 @@ export async function getRun(runId: string): Promise<RunRecord> {
 
 export async function listUserRuns(userId: string, limit = 50): Promise<RunRecord[]> {
   return getJson<RunRecord[]>(`/api/users/${encodeURIComponent(userId)}/runs?limit=${limit}`);
+}
+
+export async function listUserEnvironments(userId: string, limit = 100): Promise<any[]> {
+  return getJson<any[]>(`/api/users/${encodeURIComponent(userId)}/environments?limit=${limit}`);
 }
