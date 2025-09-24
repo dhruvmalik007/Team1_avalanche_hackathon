@@ -1,7 +1,5 @@
-import Link from 'next/link';
 import { environments } from '@/lib/environments';
 import { parseGithubRepo, fetchRepoMeta, fetchRepoTags, listRepoContents } from '@/lib/github';
-import { timeAgo } from '@/lib/time';
 import EnvironmentDetailsClient from '@/components/environments/EnvironmentDetailsClient';
 
 export default async function EnvironmentDetails({ params }: { params: { owner: string; slug: string } }) {

@@ -1,4 +1,4 @@
-import type { RunStatus, RunRecord, SubmitRunRequest, SubmitRunResponse, EnvironmentDTO } from '@rlhub/api-types';
+import type { RunRecord, SubmitRunRequest, SubmitRunResponse, EnvironmentDTO } from '@rlhub/api-types';
 import { environments as localEnvs } from '../../lib/environments';
 
 // Simple in-memory store to simulate SQS -> SFN -> ECS progression
@@ -19,12 +19,11 @@ function makeId(): string {
   // Prefer crypto.randomUUID if available
   // Fallback to timestamp-rand
   try {
-    // @ts-ignore
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-      // @ts-ignore
-      return crypto.randomUUID();
+    const rnd = (globalThis as any)?.crypto?.randomUUID;
+    if (typeof rnd === 'function') {
+      return rnd();
     }
-  } catch {}
+  } catch { void 0; }
   return `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
 }
 
@@ -42,7 +41,7 @@ export function listEnvironments(): EnvironmentDTO[] {
 }
 
 export function createRun(userId: string, body: SubmitRunRequest): SubmitRunResponse {
-  const { envId = 'demo/unknown', commit, params, onChain } = body || {};
+  const { envId = 'demo/unknown', onChain } = body || {};
   const runId = makeId();
   const createdAt = nowSec();
   const run: RunInternal = {
@@ -81,6 +80,7 @@ export function listUserRuns(userId: string, limit = 50): RunRecord[] {
     if (r) {
       advance(r);
       const { progress: _p, _createdAtMs: _m, ...pub } = r;
+      void _p; void _m;
       out.push(pub);
     }
   }

@@ -42,7 +42,6 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       return (
         <Slot
           className={cn(buttonVariants({ variant, size }), className)}
-          // @ts-expect-error: Slot ref typing differs from HTMLButtonElement
           ref={ref}
           {...props}
         >

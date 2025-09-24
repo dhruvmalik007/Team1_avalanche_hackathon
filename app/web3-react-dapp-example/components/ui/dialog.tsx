@@ -8,8 +8,8 @@ export const Dialog = DialogPrimitive.Root
 export const DialogTrigger = DialogPrimitive.Trigger
 export const DialogClose = DialogPrimitive.Close
 
-export function DialogPortal({ className, ...props }: DialogPrimitive.DialogPortalProps) {
-  return <DialogPrimitive.Portal className={cn(className)} {...props} />
+export function DialogPortal({ ...props }: DialogPrimitive.DialogPortalProps) {
+  return <DialogPrimitive.Portal {...props} />
 }
 
 export const DialogOverlay = React.forwardRef<

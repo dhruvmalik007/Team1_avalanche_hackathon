@@ -143,7 +143,7 @@ export default function NewEnvironment() {
                 setStatus('Preparing deployment...');
 
                 // Generate values
-                let envId_deploy = slug; // owner/slug style supported
+                const envId_deploy = slug; // owner/slug style supported
                 const envPathValue = envPath || (slug ? `environments/${slug.split('/').slice(-1)[0]}` : 'env/path');
                 const commitHashValue = commitHash || randomHex(16);
                 const metadataCID = `bafy${randomHex(10)}`;
@@ -173,7 +173,7 @@ export default function NewEnvironment() {
                   registerTxHash = data.registerTxHash;
                   setStatus(`Registered. Tx: ${registerTxHash}`);
                 } else {
-                  let envId = slug;
+                  const envId = slug;
                   // Deploy (if bytecode provided) and register via wallet
                   const provider = await wallets[0]?.getEthereumProvider?.();
                   if (!provider) {
@@ -226,7 +226,7 @@ export default function NewEnvironment() {
 
                 try {
                   await saveEnvironment(envDto);
-                } catch (e) {
+                } catch {
                   // Fallback to localStorage if backend save fails
                   const key = `my_envs_${userId}`;
                   const prev = JSON.parse(localStorage.getItem(key) || '[]');
@@ -269,9 +269,7 @@ export default function NewEnvironment() {
                   } as any;
                   await saveEnvironment(envDto);
                   setSaved(nowIso);
-                } catch {
-                  // ignore secondary failure
-                }
+                } catch { /* ignore secondary failure */ }
               } finally {
                 setPending(false);
               }
@@ -306,36 +304,6 @@ const inputStyle: React.CSSProperties = {
   color: 'white',
   width: '100%'
 };
-
-function onSave(
-  { name, slug, desc, repoUrl, tags, owner }: { name: string; slug: string; desc: string; repoUrl?: string; tags?: string; owner: string },
-  setSaved: (s: string) => void
-) {
-  const now = new Date().toISOString();
-  const item = {
-    owner,
-    slug,
-    name,
-    description: desc,
-    tags: (tags || '')
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean),
-    stars: 0,
-    version: '0.1.0',
-    updatedAt: now,
-    repoUrl: repoUrl || undefined,
-  };
-  try {
-    const key = `my_envs_${owner}`;
-    const prev = JSON.parse(localStorage.getItem(key) || '[]');
-    const next = [item, ...prev];
-    localStorage.setItem(key, JSON.stringify(next));
-    setSaved(now);
-  } catch (e) {
-    console.error('save error', e);
-  }
-}
 
 function randomHex(bytes: number) {
   const arr = new Uint8Array(bytes);

@@ -68,9 +68,9 @@ console.log('runId', data.runId);`;
           </span>
           <h1 className="mt-4 text-3xl font-bold leading-tight md:text-5xl">
             <span className="bg-gradient-to-r from-fuchsia-400 to-violet-300 bg-clip-text text-transparent">
-              Train. Evaluate. Verify.
+              Train. Evaluate. Verify and Deploy.
             </span>{' '}
-            Reinforcement Learning on Avalanche.
+            Reinforcement learning environments onchain.
           </h1>
           <p className="mt-4 max-w-2xl text-zinc-300">
             Launch and verify RL environment runs with Prime Intellect verifiers or PRIME‑RL.

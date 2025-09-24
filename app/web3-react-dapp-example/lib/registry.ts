@@ -46,13 +46,11 @@ export async function deployAndRegister(args: DeployAndRegisterArgs): Promise<De
   if (!from) {
     try {
       if (typeof ethereum.request === 'function') {
-        try { await (ethereum as any).request({ method: 'eth_requestAccounts' }); } catch {}
+        try { await (ethereum as any).request({ method: 'eth_requestAccounts' }); } catch { /* ignore */ void 0; }
       }
       const addrs = await wallet.getAddresses();
       if (addrs && addrs.length > 0) from = addrs[0] as Address;
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ void 0; }
   }
   if (!from) throw new Error('Unable to determine wallet account');
 
@@ -60,7 +58,7 @@ export async function deployAndRegister(args: DeployAndRegisterArgs): Promise<De
   try {
     // Some providers require explicit account request first
     if (typeof ethereum.request === 'function') {
-      try { await (ethereum as any).request({ method: 'eth_requestAccounts' }); } catch {}
+      try { await (ethereum as any).request({ method: 'eth_requestAccounts' }); } catch { /* ignore */ void 0; }
     }
     const targetHex = '0x' + chain.id.toString(16);
     if (typeof (wallet as any).switchChain === 'function') {
@@ -85,8 +83,8 @@ export async function deployAndRegister(args: DeployAndRegisterArgs): Promise<De
         }
       }
     }
-  } catch (e) {
-    // Non-fatal; continue and let tx fail if on wrong chain
+  } catch {
+    /* Non-fatal; continue and let tx fail if on wrong chain */
   }
 
   // If bytecode provided, deploy a fresh EnvRegistry. Otherwise use predeployed address.

@@ -18,7 +18,7 @@ export default function HistoryPage() {
 
   useEffect(() => {
     let cancelled = false;
-    let timer: any;
+    
 
     async function load() {
       try {
@@ -35,7 +35,7 @@ export default function HistoryPage() {
 
     load();
     // Refresh periodically to pick up new runs
-    timer = setInterval(load, 3000);
+    const timer = setInterval(load, 3000);
     return () => { cancelled = true; if (timer) clearInterval(timer); };
   }, [userId]);
 

@@ -68,7 +68,7 @@ export default function ProfilePage() {
           const key = `my_envs_${primaryAddress}`;
           const data = JSON.parse(localStorage.getItem(key) || '[]');
           setMyEnvs(data);
-        } catch {}
+        } catch { /* ignore */ }
       }
     })();
     return () => { cancelled = true; };

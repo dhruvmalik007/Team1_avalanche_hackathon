@@ -16,7 +16,8 @@ export default function RunDetailsClient({ runId, initial }: { runId: string; in
   const [error, setError] = useState<string | null>(null);
   const savedOnce = useRef(false);
   const [series, setSeries] = useState<ProgressPoint[]>(() => {
-    const pct0 = Math.max(0, Math.min(100, initial?.progress?.pct ?? (initial?.status === 'COMPLETED' ? 100 : 0) ?? 0));
+    const base = initial?.progress?.pct ?? (initial?.status === 'COMPLETED' ? 100 : 0);
+    const pct0 = Math.max(0, Math.min(100, base));
     return initial ? [{ t: Date.now(), pct: pct0, msg: initial.progress?.msg || initial.status }] : [];
   });
 
@@ -55,7 +56,7 @@ export default function RunDetailsClient({ runId, initial }: { runId: string; in
             };
             localStorage.setItem(key, JSON.stringify([item, ...prev]));
             savedOnce.current = true;
-          } catch {}
+          } catch { /* ignore */ }
         }
         if (data.status !== 'COMPLETED' && data.status !== 'FAILED') {
           timer = setTimeout(tick, 1200);
